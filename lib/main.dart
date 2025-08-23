@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import "package:travelecho/pages/homescreen.dart";
-import "package:travelecho/pages/splashscreen.dart";
-
-// Import the signup and login pages with aliases to avoid ambiguity
-import 'pages/signup.dart' as signup;
-import 'pages/login.dart' as login;
-import "pages/welcomepage.dart" as welcomepage;
-import "pages/forgotpassword.dart" as forgotpassword;
-import "pages/verificationcodepage.dart" as verificationcodepage;
-import "pages/resetpassword.dart" as resetpassword;
-import "pages/passwordresetnotification.dart" as passwordresetnotification;
+import "package:flutter/services.dart";
+import "package:flutter_bloc/flutter_bloc.dart";
+import "package:flutter_screenutil/flutter_screenutil.dart";
+import "package:travelecho/config/theme/theme.dart";
+import "package:travelecho/features/auth/presentation/bloc/user_bloc.dart";
+import "package:travelecho/features/splashscreen/presentation/bloc/splash_cubit.dart";
+import "package:travelecho/features/splashscreen/presentation/pages/splashscreen.dart";
+import "package:travelecho/service_locator.dart";
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  setupServiceLocator();
   runApp(const MyApp());
 }
 
@@ -20,30 +19,32 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: true,
-      title: 'Travel Echo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      // Define routes for navigation using aliases
-      routes: {
-        '/signup': (context) =>
-            const signup.SignUpPage(), // Use alias to call SignUpPage
-        '/login': (context) =>
-            const login.LoginPage(), // Use alias to call LoginPage
-        '/welcome': (context) => welcomepage.WelcomePage(),
-        '/forgotpassword': (context) =>
-            const forgotpassword.ForgotPasswordPage(),
-        '/verificationcode': (context) => const verificationcodepage.OtpForm(),
-        '/resetpassword': (context) => const resetpassword.ResetPassword(),
-        '/passwordresetsuccess': (context) =>
-            const passwordresetnotification.PasswordResetFeedback(),
-        '/homescreen': (context) => HomeScreen(),
-        '/splashscreen': (context) => ExpandingPictureScreen(),
-      },
-      home: ExpandingPictureScreen(), // Use alias for SignUpPage
-    );
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent, // Transparent status bar
+      statusBarIconBrightness: Brightness.dark, // Black icons
+      systemNavigationBarColor:
+          Colors.white, // Optional: Change navigation bar color
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ));
+    return MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => SplashCubit()..appStarted(),
+          ),
+          BlocProvider(
+            create: (context) => sl<AuthBloc>(),
+          ),
+        ],
+        child: ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (_, child) => MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Travel Echo',
+            theme: AppTheme.appTheme,
+            // Define routes for navigation using aliases
+
+            home: const SplashScreen(), // Use alias for SignUpPage
+          ),
+        ));
   }
 }
